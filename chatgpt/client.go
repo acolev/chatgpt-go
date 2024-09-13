@@ -8,32 +8,37 @@ import (
 	"net/http"
 )
 
-// Определяем структуру запроса к API
-type GPTRequest struct {
-	Model    string    `json:"model"`
-	Messages []Message `json:"messages"`
+// GPTClient представляет клиент для взаимодействия с ChatGPT API
+type GPTClient struct {
+	apiKey string
+	model  string
 }
 
-type Message struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
+// New создает новый экземпляр GPTClient
+func New(apiKey string, version string) *GPTClient {
+	if version == "" {
+		version = "gpt-3.5-turbo" // Модель по умолчанию
+	}
+	return &GPTClient{
+		apiKey: apiKey,
+		model:  version, // Модель по умолчанию, можно вынести в параметр
+	}
 }
 
-// Определяем структуру ответа API
-type GPTResponse struct {
-	Choices []struct {
-		Message Message `json:"message"`
-	} `json:"choices"`
-}
-
-// Функция отправки запроса к API
-func SendMessage(apiKey, prompt string) (string, error) {
+// SendMessage отправляет запрос к ChatGPT API с возможностью использования chat ID
+func (client *GPTClient) SendMessage(prompt, chatID string, context []Message) (string, error) {
 	url := "https://api.openai.com/v1/chat/completions"
+
+	// Формируем запрос с учетом контекста предыдущих сообщений (если есть)
+	messages := append(context, Message{
+		Role:    "user",
+		Content: prompt,
+	})
+
 	reqBody := GPTRequest{
-		Model: "gpt-3.5-turbo", // Используемая модель
-		Messages: []Message{
-			{Role: "user", Content: prompt},
-		},
+		Model:    client.model,
+		Messages: messages,
+		ChatID:   chatID, // Поддержка чата с сохранением истории
 	}
 
 	jsonReq, err := json.Marshal(reqBody)
@@ -47,10 +52,10 @@ func SendMessage(apiKey, prompt string) (string, error) {
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", apiKey))
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", client.apiKey))
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	clientHTTP := &http.Client{}
+	resp, err := clientHTTP.Do(req)
 	if err != nil {
 		return "", err
 	}
