@@ -38,7 +38,6 @@ func (client *GPTClient) SendMessage(prompt, chatID string, context []Message) (
 	reqBody := GPTRequest{
 		Model:    client.model,
 		Messages: messages,
-		ChatID:   chatID, // Поддержка чата с сохранением истории
 	}
 
 	jsonReq, err := json.Marshal(reqBody)
