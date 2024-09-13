@@ -26,7 +26,7 @@ func New(apiKey string, version string) *GPTClient {
 }
 
 // SendMessage отправляет запрос к ChatGPT API с возможностью использования chat ID
-func (client *GPTClient) SendMessage(prompt, chatID string, context []Message) (string, error) {
+func (client *GPTClient) SendMessage(prompt string, context []Message) (string, error) {
 	url := "https://api.openai.com/v1/chat/completions"
 
 	// Формируем запрос с учетом контекста предыдущих сообщений (если есть)
